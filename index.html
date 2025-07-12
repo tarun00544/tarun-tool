@@ -1,0 +1,845 @@
+c  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tarun's AI Smart Calculator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 20px;
+      color: #fff;
+      margin: 0;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .calculator {
+      background: linear-gradient(145deg, #2e2e3e, #3a3a4a);
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.1);
+      width: 360px;
+      position: relative;
+      overflow: hidden;
+    }
+    .calculator::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.05), transparent);
+      transform: rotate(45deg);
+      animation: shimmer 3s infinite;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+      100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      background: linear-gradient(45deg, #00cec9, #00b894);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .ai-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      justify-content: center;
+    }
+    .ai-btn {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .camera-btn {
+      background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+      color: white;
+    }
+    .mic-btn {
+      background: linear-gradient(45deg, #fd79a8, #fdcb6e);
+      color: white;
+    }
+    .ai-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+    .ai-btn:active {
+      transform: translateY(0);
+    }
+    .ai-btn.active {
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    #display {
+      width: 100%;
+      padding: 18px;
+      font-size: 1.6rem;
+      border: none;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      background: linear-gradient(145deg, #000, #1a1a1a);
+      color: #00ff88;
+      text-align: right;
+      box-shadow: inset 0 4px 8px rgba(0,0,0,0.3);
+      font-family: 'Courier New', monospace;
+      box-sizing: border-box;
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+    .calc-btn {
+      padding: 16px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #444, #555);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      position: relative;
+      overflow: hidden;
+    }
+    .calc-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      transform: translate(-50%, -50%);
+    }
+    .calc-btn:hover::before {
+      width: 100%;
+      height: 100%;
+    }
+    .calc-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    .equals { 
+      background: linear-gradient(45deg, #00b894, #00cec9);
+      color: #000;
+      font-weight: bold;
+    }
+    .clear { 
+      background: linear-gradient(45deg, #d63031, #ff4757);
+    }
+    .history {
+      background: linear-gradient(145deg, #2c2c3c, #3a3a4a);
+      border-radius: 20px;
+      padding: 25px;
+      width: 250px;
+      overflow-y: auto;
+      max-height: 600px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    }
+    .history h3 {
+      margin-top: 0;
+      color: #00cec9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.2rem;
+    }
+    .history p {
+      font-family: 'Courier New', monospace;
+      margin: 8px 0;
+      padding: 8px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      border-left: 3px solid #00cec9;
+    }
+    .clear-history-btn {
+      background: linear-gradient(45deg, #d63031, #ff4757);
+      border: none;
+      color: #fff;
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .clear-history-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .camera-preview {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .camera-container {
+      background: #2e2e3e;
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+      max-width: 90%;
+      max-height: 90%;
+    }
+    video, canvas {
+      max-width: 100%;
+      max-height: 400px;
+      border-radius: 10px;
+    }
+    .camera-controls {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .capture-btn {
+      background: linear-gradient(45deg, #00b894, #00cec9);
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .close-btn {
+      background: linear-gradient(45deg, #d63031, #ff4757);
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .upload-btn {
+      background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .status-message {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .status-success {
+      background: rgba(0, 184, 148, 0.2);
+      color: #00b894;
+      border: 1px solid #00b894;
+    }
+    .status-error {
+      background: rgba(214, 48, 49, 0.2);
+      color: #d63031;
+      border: 1px solid #d63031;
+    }
+    .status-info {
+      background: rgba(116, 185, 255, 0.2);
+      color: #74b9ff;
+      border: 1px solid #74b9ff;
+    }
+    .hidden-file-input {
+      display: none;
+    }
+    .captured-image {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 10px;
+      margin: 10px 0;
+      border: 2px solid #00cec9;
+    }
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .calculator {
+        width: 100%;
+        max-width: 360px;
+      }
+      .history {
+        width: 100%;
+        max-width: 360px;
+      }
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <div class="calculator">
+    <div class="header">
+      <h1>🧮 Tarun's AI Calculator</h1>
+    </div>
+    
+    <div class="ai-controls">
+      <button class="ai-btn camera-btn" id="cameraBtn">
+        📷 Scan Problem
+      </button>
+      <button class="ai-btn mic-btn" id="micBtn">
+        🎤 Voice Input
+      </button>
+    </div>
+
+    <input type="text" id="display" placeholder="0" readonly>
+    
+    <div class="buttons">
+      <button class="calc-btn clear" data-action="clear">C</button>
+      <button class="calc-btn" data-value="(">(</button>
+      <button class="calc-btn" data-value=")">)</button>
+      <button class="calc-btn" data-value="%">%</button>
+      <button class="calc-btn" data-value="/">÷</button>
+
+      <button class="calc-btn" data-value="7">7</button>
+      <button class="calc-btn" data-value="8">8</button>
+      <button class="calc-btn" data-value="9">9</button>
+      <button class="calc-btn" data-value="*">×</button>
+      <button class="calc-btn" data-value="Math.sqrt(">√</button>
+
+      <button class="calc-btn" data-value="4">4</button>
+      <button class="calc-btn" data-value="5">5</button>
+      <button class="calc-btn" data-value="6">6</button>
+      <button class="calc-btn" data-value="-">−</button>
+      <button class="calc-btn" data-value="**">xʸ</button>
+
+      <button class="calc-btn" data-value="1">1</button>
+      <button class="calc-btn" data-value="2">2</button>
+      <button class="calc-btn" data-value="3">3</button>
+      <button class="calc-btn" data-value="+">+</button>
+      <button class="calc-btn" data-value=".">.</button>
+
+      <button class="calc-btn" data-value="0">0</button>
+      <button class="calc-btn" data-value="Math.sin(">sin</button>
+      <button class="calc-btn" data-value="Math.cos(">cos</button>
+      <button class="calc-btn" data-value="Math.tan(">tan</button>
+      <button class="calc-btn" data-value="Math.log(">log</button>
+
+      <button class="calc-btn equals" data-action="calculate">=</button>
+    </div>
+    
+    <div id="statusMessage"></div>
+  </div>
+
+  <div class="history">
+    <h3>
+      🕓 History
+      <button class="clear-history-btn" id="clearHistoryBtn">Clear</button>
+    </h3>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<!-- Camera Preview Modal -->
+<div id="cameraPreview" class="camera-preview">
+  <div class="camera-container">
+    <h3>📷 Scan Math Problem</h3>
+    <video id="cameraVideo" autoplay></video>
+    <canvas id="cameraCanvas" style="display: none;"></canvas>
+    <img id="capturedImage" class="captured-image" style="display: none;">
+    <div class="camera-controls">
+      <button class="capture-btn" id="captureBtn">📸 Capture</button>
+      <button class="upload-btn" id="uploadBtn">📁 Upload Image</button>
+      <button class="close-btn" id="closeCameraBtn">❌ Close</button>
+    </div>
+    <div id="cameraStatus"></div>
+  </div>
+</div>
+
+<!-- Hidden file input for image upload -->
+<input type="file" id="imageUpload" class="hidden-file-input" accept="image/*">
+
+<script>
+  let currentStream = null;
+  let recognition = null;
+  let isListening = false;
+
+  // Basic calculator functions
+  function append(value) {
+    const display = document.getElementById('display');
+    display.value += value;
+  }
+
+  function clearDisplay() {
+    const display = document.getElementById('display');
+    display.value = '';
+  }
+
+  function calculate() {
+    const display = document.getElementById('display');
+    const input = display.value;
+    try {
+      const result = eval(input);
+      addToHistory(input, result);
+      display.value = result;
+    } catch (e) {
+      display.value = 'Error';
+      showStatus('Invalid expression', 'error');
+    }
+  }
+
+  function clearHistory() {
+    const historyList = document.getElementById('historyList');
+    historyList.innerHTML = '';
+  }
+
+  function addToHistory(expression, result) {
+    const historyList = document.getElementById('historyList');
+    const historyItem = document.createElement('p');
+    historyItem.innerHTML = `${expression} = ${result}`;
+    historyList.appendChild(historyItem);
+    historyList.scrollTop = historyList.scrollHeight;
+  }
+
+  function showStatus(message, type = 'info') {
+    const statusDiv = document.getElementById('statusMessage');
+    statusDiv.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
+    setTimeout(() => {
+      statusDiv.innerHTML = '';
+    }, 5000);
+  }
+
+  function showCameraStatus(message, type = 'info') {
+    const statusDiv = document.getElementById('cameraStatus');
+    statusDiv.innerHTML = `<div class="status-message status-${type}">${message}</div>`;
+  }
+
+  // OCR और Math Processing Functions
+  function extractTextFromImage(imageElement) {
+    return new Promise((resolve, reject) => {
+      showCameraStatus('🔍 Extracting text from image...', 'info');
+      
+      Tesseract.recognize(imageElement, 'eng', {
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            showCameraStatus(`🔍 Processing: ${Math.round(m.progress * 100)}%`, 'info');
+          }
+        }
+      }).then(({ data: { text } }) => {
+        resolve(text);
+      }).catch(error => {
+        reject(error);
+      });
+    });
+  }
+
+  function cleanMathExpression(text) {
+    // Remove extra spaces and clean up text
+    let cleaned = text.replace(/\s+/g, ' ').trim();
+    
+    // Common OCR corrections for math symbols
+    cleaned = cleaned
+      .replace(/[xX×]/g, '*')
+      .replace(/[÷]/g, '/')
+      .replace(/[−–]/g, '-')
+      .replace(/[+]/g, '+')
+      .replace(/[=]/g, '=')
+      .replace(/[%]/g, '%')
+      .replace(/\^/g, '**')
+      .replace(/sqrt/gi, 'Math.sqrt')
+      .replace(/sin/gi, 'Math.sin')
+      .replace(/cos/gi, 'Math.cos')
+      .replace(/tan/gi, 'Math.tan')
+      .replace(/log/gi, 'Math.log')
+      .replace(/ln/gi, 'Math.log')
+      .replace(/π/g, 'Math.PI')
+      .replace(/pi/gi, 'Math.PI')
+      .replace(/e/g, 'Math.E')
+      .replace(/[()]/g, match => match); // Keep parentheses as is
+
+    // Remove non-mathematical characters but keep operators, numbers, and math functions
+    cleaned = cleaned.replace(/[^0-9+\-*/()%.MathsqrtincoslgEPI]/g, '');
+    
+    // Fix common OCR mistakes
+    cleaned = cleaned.replace(/[oO]/g, '0');
+    cleaned = cleaned.replace(/[Il]/g, '1');
+    cleaned = cleaned.replace(/[S]/g, '5');
+    cleaned = cleaned.replace(/[Z]/g, '2');
+    
+    return cleaned;
+  }
+
+  function findMathExpressions(text) {
+    const expressions = [];
+    const lines = text.split('\n');
+    
+    for (let line of lines) {
+      const cleaned = cleanMathExpression(line);
+      if (cleaned.length > 0 && /[0-9+\-*/()]/.test(cleaned)) {
+        expressions.push(cleaned);
+      }
+    }
+    
+    return expressions;
+  }
+
+  async function processImageWithOCR(imageElement) {
+    try {
+      const text = await extractTextFromImage(imageElement);
+      console.log('Extracted text:', text);
+      
+      const mathExpressions = findMathExpressions(text);
+      console.log('Found math expressions:', mathExpressions);
+      
+      if (mathExpressions.length > 0) {
+        const bestExpression = mathExpressions[0]; // Take the first/best one
+        document.getElementById('display').value = bestExpression;
+        showCameraStatus(`✅ Found: ${bestExpression}`, 'success');
+        
+        setTimeout(() => {
+          closeCamera();
+        }, 2000);
+      } else {
+        showCameraStatus('❌ No math expression found. Try again with clearer image.', 'error');
+      }
+    } catch (error) {
+      console.error('OCR Error:', error);
+      showCameraStatus('❌ Failed to process image. Try again.', 'error');
+    }
+  }
+
+  // Camera functionality
+  async function openCamera() {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showStatus('Camera not supported in this browser', 'error');
+        return;
+      }
+
+      showStatus('📷 Opening camera...', 'info');
+      
+      const constraints = {
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      };
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        setupCamera(stream);
+      } catch (error) {
+        const fallbackConstraints = {
+          video: {
+            facingMode: 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        };
+        
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+          setupCamera(stream);
+        } catch (fallbackError) {
+          const basicStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          setupCamera(basicStream);
+        }
+      }
+    } catch (error) {
+      let errorMsg = 'Camera access failed';
+      
+      switch(error.name) {
+        case 'NotAllowedError':
+          errorMsg = 'Camera permission denied. Enable in browser settings.';
+          break;
+        case 'NotFoundError':
+          errorMsg = 'No camera found on this device.';
+          break;
+        case 'NotSupportedError':
+          errorMsg = 'Camera not supported in this browser.';
+          break;
+        case 'NotReadableError':
+          errorMsg = 'Camera is being used by another app.';
+          break;
+        default:
+          errorMsg = `Camera error: ${error.message}`;
+      }
+      
+      showStatus(errorMsg, 'error');
+    }
+  }
+
+  function setupCamera(stream) {
+    currentStream = stream;
+    const video = document.getElementById('cameraVideo');
+    video.srcObject = stream;
+    
+    video.onloadedmetadata = function() {
+      document.getElementById('cameraPreview').style.display = 'flex';
+      showCameraStatus('📷 Camera ready! Point at math problem and capture', 'success');
+    };
+  }
+
+  function closeCamera() {
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => track.stop());
+      currentStream = null;
+    }
+    document.getElementById('cameraPreview').style.display = 'none';
+    document.getElementById('capturedImage').style.display = 'none';
+    document.getElementById('cameraVideo').style.display = 'block';
+  }
+
+  function capturePhoto() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    const context = canvas.getContext('2d');
+    const capturedImage = document.getElementById('capturedImage');
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0);
+    
+    // Convert canvas to image
+    const imageDataUrl = canvas.toDataURL('image/png');
+    capturedImage.src = imageDataUrl;
+    capturedImage.style.display = 'block';
+    video.style.display = 'none';
+    
+    // Process the captured image with OCR
+    processImageWithOCR(capturedImage);
+  }
+
+  function uploadImage() {
+    document.getElementById('imageUpload').click();
+  }
+
+  function processUploadedImage(input) {
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const capturedImage = document.getElementById('capturedImage');
+          capturedImage.src = e.target.result;
+          capturedImage.style.display = 'block';
+          document.getElementById('cameraVideo').style.display = 'none';
+          
+          // Process the uploaded image with OCR
+          processImageWithOCR(capturedImage);
+        };
+        img.src = e.target.result;
+      };
+      
+      reader.readAsDataURL(file);
+    }
+  }
+
+  // Voice recognition functionality
+  function initVoiceRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
+    
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = function() {
+        isListening = true;
+        const micBtn = document.getElementById('micBtn');
+        micBtn.classList.add('active');
+        micBtn.innerHTML = '🔴 Listening...';
+        showStatus('🎤 Listening... Speak your math problem', 'info');
+      };
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        const mathExpression = parseVoiceToMath(transcript);
+        
+        if (mathExpression) {
+          document.getElementById('display').value = mathExpression;
+          showStatus(`Heard: "${transcript}" → ${mathExpression}`, 'success');
+        } else {
+          showStatus('Could not understand math expression. Try again.', 'error');
+        }
+      };
+
+      recognition.onerror = function(event) {
+        let errorMsg = 'Voice recognition error';
+        
+        switch(event.error) {
+          case 'no-speech':
+            errorMsg = 'No speech detected. Try speaking louder.';
+            break;
+          case 'audio-capture':
+            errorMsg = 'Microphone not accessible. Check permissions.';
+            break;
+          case 'not-allowed':
+            errorMsg = 'Microphone permission denied. Enable in browser settings.';
+            break;
+          case 'network':
+            errorMsg = 'Network error. Check your connection.';
+            break;
+          case 'service-not-allowed':
+            errorMsg = 'Speech service not available.';
+            break;
+          default:
+            errorMsg = `Speech error: ${event.error}`;
+        }
+        
+        showStatus(errorMsg, 'error');
+        isListening = false;
+        const micBtn = document.getElementById('micBtn');
+        micBtn.classList.remove('active');
+        micBtn.innerHTML = '🎤 Voice Input';
+      };
+
+      recognition.onend = function() {
+        isListening = false;
+        const micBtn = document.getElementById('micBtn');
+        micBtn.classList.remove('active');
+        micBtn.innerHTML = '🎤 Voice Input';
+      };
+      
+      return true;
+    }
+    return false;
+  }
+
+  function toggleVoice() {
+    if (!recognition) {
+      if (!initVoiceRecognition()) {
+        showStatus('Voice recognition not supported in this browser', 'error');
+        return;
+      }
+    }
+    
+    if (isListening) {
+      recognition.stop();
+    } else {
+      try {
+        recognition.start();
+      } catch (error) {
+        showStatus('Could not start voice recognition. Try again.', 'error');
+      }
+    }
+  }
+
+  function parseVoiceToMath(transcript) {
+    let expression = transcript
+      .replace(/plus/g, '+')
+      .replace(/add/g, '+')
+      .replace(/minus/g, '-')
+      .replace(/subtract/g, '-')
+      .replace(/times/g, '*')
+      .replace(/multiply/g, '*')
+      .replace(/divided by/g, '/')
+      .replace(/divide/g, '/')
+      .replace(/equals/g, '=')
+      .replace(/square root of/g, 'Math.sqrt(')
+      .replace(/sqrt/g, 'Math.sqrt(')
+      .replace(/sine/g, 'Math.sin(')
+      .replace(/cosine/g, 'Math.cos(')
+      .replace(/tangent/g, 'Math.tan(')
+      .replace(/log/g, 'Math.log(')
+      .replace(/percent/g, '%')
+      .replace(/to the power of/g, '**')
+      .replace(/squared/g, '**2')
+      .replace(/cubed/g, '**3')
+      .replace(/open parenthesis/g, '(')
+      .replace(/close parenthesis/g, ')')
+      .replace(/\s+/g, '');
+
+    const openParenCount = (expression.match(/\(/g) || []).length;
+    const closeParenCount = (expression.match(/\)/g) || []).length;
+    
+    if (openParenCount > closeParenCount) {
+      expression += ')'.repeat(openParenCount - closeParenCount);
+    }
+
+    return expression;
+  }
+
+  // Event listeners
+  document.addEventListener('DOMContentLoaded', function() {
+    // Calculator button event listeners
+    document.querySelectorAll('.calc-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const value = this.getAttribute('data-value');
+        const action = this.getAttribute('data-action');
+        
+        if (action === 'clear') {
+          clearDisplay();
+        } else if (action === 'calculate') {
+          calculate();
+        } else if (value) {
+          append(value);
+        }
+      });
+    });
+
+    // AI controls
+    document.getElementById('cameraBtn').addEventListener('click', function() {
+      openCamera();
+    });
+
+    document.getElementById('micBtn').addEventListener('click', function() {
+      toggleVoice();
+    });
+
+    // Camera controls
+    document.getElementById('captureBtn').addEventListener('click', capturePhoto);
+    document.getElementById('uploadBtn').addEventListener('click', uploadImage);
+    document.getElementById('closeCameraBtn').addEventListener('click', closeCamera);
+
+    // History
+    document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
+
+    // File upload
+    document.getElementById('imageUpload').addEventListener('change', function() {
+      processUploadedImage(this);
+    });
+
+    // Check feature support
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      const micBtn = document.getElementById('micBtn');
+      micBtn.disabled = true;
+      micBtn.innerHTML = '🎤 Not Supported';
+      micBtn.style.opacity = '0.5';
+      micBtn.style.cursor = 'not-allowed';
+    }
+
+    if (!navigator.mediaDevices || !navigator
